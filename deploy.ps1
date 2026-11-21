@@ -115,16 +115,21 @@ function Ensure-EnvSecrets {
     Ensure-EnvSecret "AUTH_SECRET" (Get-RandBase64 32)
     Ensure-EnvSecret "ENCRYPTION_KEY" (Get-RandBase64 32)
 
-    if (-not (Test-EnvHasValue "POSTGRES_PASSWORD")) {
-        docker volume inspect jobsync_pgdata *> $null
-        if ($LASTEXITCODE -eq 0) {
-            Ensure-EnvSecret "POSTGRES_PASSWORD" "jobsync"
-            Write-Host "Existing Postgres volume found — kept former default POSTGRES_PASSWORD=jobsync." -ForegroundColor Yellow
-            Write-Host "Only change it if you recreate the volume." -ForegroundColor Yellow
-        } else {
-            Ensure-EnvSecret "POSTGRES_PASSWORD" (Get-RandBase64 24)
-        }
+    # Never hardcode credential values here — secret scanners flag KEY=value literals.
+    if (Test-EnvHasValue "POSTGRES_PASSWORD") { return }
+
+    # An existing volume was initialised with whatever password was in effect
+    # then. Generating a new one would break auth — require an explicit .env value.
+    docker volume inspect jobsync_pgdata *> $null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Postgres volume jobsync_pgdata already exists, but POSTGRES_PASSWORD is not set in .env." -ForegroundColor Red
+        Write-Host "Add POSTGRES_PASSWORD to .env using the password from when that volume was first created."
+        Write-Host "Older installs used the same string as the database role name (see POSTGRES_USER in docker-compose.yml)."
+        Write-Host "New random passwords only work after removing the volume (data loss) or altering the role inside the db container."
+        exit 1
     }
+
+    Ensure-EnvSecret "POSTGRES_PASSWORD" (Get-RandBase64 24)
 }
 
 Write-Host "[2/5] Fetching latest changes from GitHub..." -ForegroundColor Green

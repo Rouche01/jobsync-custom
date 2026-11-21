@@ -62,7 +62,7 @@ if ! git diff --quiet HEAD -- docker-compose.yml; then
 fi
 
 # Write missing secrets into .env so compose never falls back to public defaults.
-# Existing bundled volumes that used the old compose default keep password "jobsync".
+# Never hardcode credential values here — secret scanners flag KEY=value literals.
 rand_b64() {
     local nbytes="${1:-32}"
     if command -v openssl >/dev/null 2>&1; then
@@ -104,15 +104,21 @@ ensure_env_secrets() {
     ensure_env_secret AUTH_SECRET "$(rand_b64 32)"
     ensure_env_secret ENCRYPTION_KEY "$(rand_b64 32)"
 
-    if ! env_has_value POSTGRES_PASSWORD; then
-        if docker volume inspect jobsync_pgdata >/dev/null 2>&1; then
-            ensure_env_secret POSTGRES_PASSWORD "jobsync"
-            echo -e "${YELLOW}Existing Postgres volume found — kept former default POSTGRES_PASSWORD=jobsync.${NC}"
-            echo -e "${YELLOW}Only change it if you recreate the volume.${NC}"
-        else
-            ensure_env_secret POSTGRES_PASSWORD "$(rand_b64 24)"
-        fi
+    if env_has_value POSTGRES_PASSWORD; then
+        return 0
     fi
+
+    # An existing volume was initialised with whatever password was in effect
+    # then. Generating a new one would break auth — require an explicit .env value.
+    if docker volume inspect jobsync_pgdata >/dev/null 2>&1; then
+        echo -e "${RED}Postgres volume jobsync_pgdata already exists, but POSTGRES_PASSWORD is not set in .env.${NC}"
+        echo -e "Add POSTGRES_PASSWORD to .env using the password from when that volume was first created."
+        echo -e "Older installs used the same string as the database role name (see POSTGRES_USER in docker-compose.yml)."
+        echo -e "New random passwords only work after removing the volume (data loss) or altering the role inside the db container."
+        exit 1
+    fi
+
+    ensure_env_secret POSTGRES_PASSWORD "$(rand_b64 24)"
 }
 
 # Fetch latest changes

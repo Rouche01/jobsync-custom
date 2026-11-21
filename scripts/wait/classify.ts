@@ -69,7 +69,7 @@ export function maintenanceUrl(raw: string): string {
 export const quoteIdent = (name: string) => `"${name.replace(/"/g, '""')}"`;
 
 // Driver messages can echo the connection string. Only the :password@ form
-// is masked, since the default password "jobsync" is also the user and db name
+// is masked (the role/db name can legitimately appear elsewhere in the text).
 export function redact(message: string, raw: string): string {
   let password = "";
   try {
