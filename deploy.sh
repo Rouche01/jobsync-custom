@@ -61,6 +61,60 @@ if ! git diff --quiet HEAD -- docker-compose.yml; then
     exit 1
 fi
 
+# Write missing secrets into .env so compose never falls back to public defaults.
+# Existing bundled volumes that used the old compose default keep password "jobsync".
+rand_b64() {
+    local nbytes="${1:-32}"
+    if command -v openssl >/dev/null 2>&1; then
+        openssl rand -base64 "$nbytes" | tr -d '\n'
+    else
+        head -c "$nbytes" /dev/urandom | base64 | tr -d '\n'
+    fi
+}
+
+env_has_value() {
+    # True when .env has KEY=non-empty (ignores comments and blank assignments)
+    grep -qE "^${1}=.+" .env 2>/dev/null
+}
+
+ensure_env_secret() {
+    local key="$1" value="$2"
+    if env_has_value "$key"; then
+        return 0
+    fi
+    # Drop a blank KEY= line so we do not leave duplicates
+    if [ -f .env ] && grep -qE "^${key}=" .env; then
+        grep -vE "^${key}=" .env > .env.tmp && mv .env.tmp .env
+    fi
+    printf '\n%s=%s\n' "$key" "$value" >> .env
+    echo -e "${GREEN}Wrote ${key} to .env${NC}"
+}
+
+ensure_env_secrets() {
+    if [ ! -f .env ]; then
+        if [ -f .env.example ]; then
+            cp .env.example .env
+            echo -e "${GREEN}Created .env from .env.example${NC}"
+        else
+            touch .env
+            echo -e "${GREEN}Created empty .env${NC}"
+        fi
+    fi
+
+    ensure_env_secret AUTH_SECRET "$(rand_b64 32)"
+    ensure_env_secret ENCRYPTION_KEY "$(rand_b64 32)"
+
+    if ! env_has_value POSTGRES_PASSWORD; then
+        if docker volume inspect jobsync_pgdata >/dev/null 2>&1; then
+            ensure_env_secret POSTGRES_PASSWORD "jobsync"
+            echo -e "${YELLOW}Existing Postgres volume found — kept former default POSTGRES_PASSWORD=jobsync.${NC}"
+            echo -e "${YELLOW}Only change it if you recreate the volume.${NC}"
+        else
+            ensure_env_secret POSTGRES_PASSWORD "$(rand_b64 24)"
+        fi
+    fi
+}
+
 # Fetch latest changes
 echo -e "${GREEN}[2/5]${NC} Fetching latest changes from GitHub..."
 git fetch origin
@@ -69,6 +123,10 @@ git fetch origin
 echo -e "${GREEN}[3/5]${NC} Checking out branch: ${YELLOW}$BRANCH${NC}"
 git checkout "$BRANCH"
 git pull origin "$BRANCH"
+
+echo -e "${GREEN}Ensuring secrets in .env...${NC}"
+ensure_env_secrets
+echo ""
 
 # Stop existing containers
 echo -e "${GREEN}[4/5]${NC} Stopping existing containers..."

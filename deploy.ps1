@@ -66,6 +66,67 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+function Get-RandBase64([int]$ByteCount = 32) {
+    $bytes = New-Object byte[] $ByteCount
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $rng.GetBytes($bytes)
+    } finally {
+        $rng.Dispose()
+    }
+    return [Convert]::ToBase64String($bytes)
+}
+
+function Test-EnvHasValue([string]$Key) {
+    if (-not (Test-Path ".env")) { return $false }
+    return $null -ne (Select-String -Path ".env" -Pattern "^$Key=.+" -Quiet)
+}
+
+function Ensure-EnvSecret([string]$Key, [string]$Value) {
+    if (Test-EnvHasValue $Key) { return }
+    if (-not (Test-Path ".env")) {
+        if (Test-Path ".env.example") {
+            Copy-Item ".env.example" ".env"
+            Write-Host "Created .env from .env.example" -ForegroundColor Green
+        } else {
+            New-Item -Path ".env" -ItemType File | Out-Null
+            Write-Host "Created empty .env" -ForegroundColor Green
+        }
+    }
+    if (Select-String -Path ".env" -Pattern "^$Key=" -Quiet) {
+        $lines = Get-Content ".env" | Where-Object { $_ -notmatch "^$Key=" }
+        Set-Content -Path ".env" -Value $lines
+    }
+    Add-Content -Path ".env" -Value "`n$Key=$Value"
+    Write-Host "Wrote $Key to .env" -ForegroundColor Green
+}
+
+function Ensure-EnvSecrets {
+    if (-not (Test-Path ".env")) {
+        if (Test-Path ".env.example") {
+            Copy-Item ".env.example" ".env"
+            Write-Host "Created .env from .env.example" -ForegroundColor Green
+        } else {
+            New-Item -Path ".env" -ItemType File | Out-Null
+            Write-Host "Created empty .env" -ForegroundColor Green
+        }
+    }
+
+    Ensure-EnvSecret "AUTH_SECRET" (Get-RandBase64 32)
+    Ensure-EnvSecret "ENCRYPTION_KEY" (Get-RandBase64 32)
+
+    if (-not (Test-EnvHasValue "POSTGRES_PASSWORD")) {
+        docker volume inspect jobsync_pgdata *> $null
+        if ($LASTEXITCODE -eq 0) {
+            Ensure-EnvSecret "POSTGRES_PASSWORD" "jobsync"
+            Write-Host "Existing Postgres volume found — kept former default POSTGRES_PASSWORD=jobsync." -ForegroundColor Yellow
+            Write-Host "Only change it if you recreate the volume." -ForegroundColor Yellow
+        } else {
+            Ensure-EnvSecret "POSTGRES_PASSWORD" (Get-RandBase64 24)
+        }
+    }
+}
+
 Write-Host "[2/5] Fetching latest changes from GitHub..." -ForegroundColor Green
 git fetch origin
 Assert-LastExit "git fetch failed"
@@ -75,6 +136,10 @@ git checkout $Branch
 Assert-LastExit "git checkout failed"
 git pull origin $Branch
 Assert-LastExit "git pull failed"
+
+Write-Host "Ensuring secrets in .env..." -ForegroundColor Green
+Ensure-EnvSecrets
+Write-Host ""
 
 Write-Host "[4/5] Stopping existing containers..." -ForegroundColor Green
 Compose down

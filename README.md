@@ -78,8 +78,9 @@ Environment variables are set in a `.env` file beside `docker-compose.yml` (copy
 | Variable | Description |
 |---|---|
 | `TZ` | Your timezone (e.g. `America/Edmonton`). **Set this on remote servers** to avoid activity time shifts. |
-| `AUTH_SECRET` | Auto-generated if not set. To set manually: `openssl rand -base64 32` |
-| `ENCRYPTION_KEY` | Encrypts the API keys you save in Settings. **Set your own** (`openssl rand -base64 32`) before adding any keys, and never change it afterwards — a new value makes every stored API key unrecoverable. |
+| `AUTH_SECRET` | Signs sessions. `deploy.sh` / `deploy.ps1` write a stable value into `.env` if missing; otherwise the entrypoint generates a temporary one per boot. Manual: `openssl rand -base64 32` |
+| `ENCRYPTION_KEY` | Encrypts the API keys you save in Settings. **Required** — deploy scripts generate one if missing. Set your own (`openssl rand -base64 32`) before adding any keys, and never change it afterwards — a new value makes every stored API key unrecoverable. |
+| `POSTGRES_PASSWORD` | Password for the bundled Postgres. Deploy scripts generate one if missing (existing volumes that used the old default keep `jobsync`). Do not change it after the volume exists unless you recreate the volume. |
 | `NEXTAUTH_URL` | The address you open JobSync at. Defaults to `http://localhost:3737`; on a homelab server, use the server's IP or hostname. |
 | `MCP_ENABLED` | Set to `false` to turn off the [MCP server](#mcp-server-ai-agent-integration). Enabled by default. |
 | `DATABASE_URL` | Leave unset to use the bundled Postgres. To use your own, set it to your server's address and also set `BUNDLED_DB=0`; without it an unused bundled database container still starts. The bundled image includes the `pgvector` extension, which an upcoming release uses for resume embeddings; your own server will need it then too. See [Upgrading to Postgres](https://github.com/Gsync/jobsync/wiki/Upgrading-To-Postgres). |

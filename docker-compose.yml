@@ -8,7 +8,9 @@ services:
     # No ports published. docker-compose.lan-db.yml opens 5432 on request.
     environment:
       - POSTGRES_USER=jobsync
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-jobsync}
+      # No default password. deploy.sh writes one into .env; required when
+      # the bundled db runs (scale > 0). Own-Postgres users can leave it unset.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
       - POSTGRES_DB=jobsync
       # Do NOT add TZ here. DB-side timestamp defaults would then be written
       # hours off from the ones Prisma writes. The app's TZ governs display.
@@ -36,17 +38,22 @@ services:
       - MCP_ENABLED=${MCP_ENABLED:-true}
       # As found; the entrypoint swaps unset or a leftover file: for bundled
       - DATABASE_URL=${DATABASE_URL:-}
-      - BUNDLED_DATABASE_URL=postgres://jobsync:${POSTGRES_PASSWORD:-jobsync}@db:5432/jobsync
+      # Same password as db; must be set in .env (no compose default).
+      - BUNDLED_DATABASE_URL=postgres://jobsync:${POSTGRES_PASSWORD}@db:5432/jobsync
       - BUNDLED_DB=${BUNDLED_DB:-1}
       - CREATE_DATABASE_IF_MISSING=${CREATE_DATABASE_IF_MISSING:-}
       - SKIP_IMPORT=${SKIP_IMPORT:-}
       - IMPORT_DRY_RUN=${IMPORT_DRY_RUN:-}
-      - AUTH_SECRET=${AUTH_SECRET:-your-auth-secret}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-you-encryption-key-here}
+      # Empty → docker-entrypoint.sh generates a temporary secret for this boot.
+      # Prefer a stable value in .env (deploy.sh writes one on first run).
+      - AUTH_SECRET=${AUTH_SECRET:-}
+      # Required to encrypt API keys saved in Settings — set in .env, never change later.
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?Set ENCRYPTION_KEY in .env (openssl rand -base64 32)}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3737}
       - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
       - TZ=${TZ:-America/Edmonton}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      # Provider keys: set in .env or leave empty and configure in Settings after sign-in.
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
