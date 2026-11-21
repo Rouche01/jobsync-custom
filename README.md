@@ -69,6 +69,8 @@ Open [http://localhost:3737](http://localhost:3737) and create your account. Tha
 
 API keys for AI providers can be configured in **Settings** after signing in.
 
+**Ubuntu ThinkPad / low-RAM laptop?** Follow the step-by-step guide: [docs/thinkpad-selfhost.md](./docs/thinkpad-selfhost.md) (Docker on Ubuntu, OpenRouter-hosted Qwen instead of local `qwen3.5:9b`).
+
 ### Configuration (Optional)
 
 Environment variables are set in a `.env` file beside `docker-compose.yml` (copy `.env.example`). Do not edit `docker-compose.yml` itself — updates replace it.
