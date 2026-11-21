@@ -1,0 +1,13 @@
+# Local / fork builds. Compose merges this with docker-compose.yml automatically.
+# Keeps the tracked compose file on ghcr.io/gsync/jobsync:latest for upstream
+# pulls, while this machine runs an image built from the Dockerfile.
+#
+# Deploy hybrid / custom code:
+#   docker compose up -d --build --force-recreate
+# Do not use ./deploy.sh for this path — it only pulls the public GHCR image.
+services:
+  app:
+    image: jobsync:local
+    build:
+      context: .
+      dockerfile: Dockerfile
