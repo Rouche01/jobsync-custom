@@ -7,6 +7,11 @@ import greenhouseSeed from "@/lib/scraper/greenhouse/companies.json";
 import leverSeed from "@/lib/scraper/lever/companies.json";
 import ashbySeed from "@/lib/scraper/ashby/companies.json";
 import type { JobBoard, LeverHost } from "@/models/automation.model";
+import { getWatchedBoards } from "@/actions/company.actions";
+import {
+  rankCompanySuggestions,
+  type RankedCompany,
+} from "@/lib/scraper/ats/suggestCompanies";
 
 // `host` is present (optional) on Lever entries only; Greenhouse entries omit it.
 type SeedCompany = { name: string; token: string; host?: LeverHost };
@@ -17,9 +22,54 @@ const SEEDS: Record<string, SeedCompany[]> = {
   ashby: ashbySeed as SeedCompany[],
 };
 
+/** Default how many hybrid suggestions to return for the wizard. */
+const SUGGEST_DEFAULT_LIMIT = 20;
+
 type ResolveResult =
   | { success: true; name: string; token: string; host?: LeverHost }
   | { success: false; message: string };
+
+export type SuggestAtsCompaniesInput = {
+  provider: JobBoard;
+  targetTitles?: string[];
+  keywords?: string[];
+  limit?: number;
+};
+
+/**
+ * Hybrid discovery: rank boards for one ATS provider from titles/keywords and
+ * the user's watchlist. Locations are not used — seeds have no geo; location
+ * filters jobs later in the automation run.
+ */
+export async function suggestAtsCompanies(
+  input: SuggestAtsCompaniesInput,
+): Promise<{ companies: RankedCompany[] }> {
+  const user = await getCurrentUser();
+  if (!user) return { companies: [] };
+
+  const seed = SEEDS[input.provider] ?? [];
+  const watchedRows = await getWatchedBoards(input.provider);
+  const watched = watchedRows.map((b) => ({
+    name: b.name,
+    token: b.token,
+    ...(b.host ? { host: b.host } : {}),
+  }));
+
+  const limit = Math.min(
+    Math.max(input.limit ?? SUGGEST_DEFAULT_LIMIT, 1),
+    APP_CONSTANTS.ATS_MAX_COMPANIES,
+  );
+
+  const companies = rankCompanySuggestions({
+    seed,
+    watched,
+    targetTitles: input.targetTitles ?? [],
+    keywords: input.keywords ?? [],
+    limit,
+  });
+
+  return { companies };
+}
 
 // Typeahead over the seeded companies.json (server-side filter, paginated).
 // An empty query browses the full list (alphabetical); `offset` drives the

@@ -2,12 +2,18 @@ vi.mock("@/utils/user.utils", () => ({
   getCurrentUser: vi.fn(),
 }));
 
+vi.mock("@/actions/company.actions", () => ({
+  getWatchedBoards: vi.fn(),
+}));
+
 import {
   resolveAtsBoard,
   searchAtsCompanies,
   getAtsCompanyCount,
+  suggestAtsCompanies,
 } from "@/actions/atsCompany.actions";
 import { getCurrentUser } from "@/utils/user.utils";
+import { getWatchedBoards } from "@/actions/company.actions";
 import { APP_CONSTANTS } from "@/lib/constants";
 
 const user = { id: "user-1" };
@@ -155,6 +161,67 @@ describe("resolveAtsBoard (greenhouse branch)", () => {
     (getCurrentUser as any).mockResolvedValue(null);
     const result = await resolveAtsBoard("greenhouse", "anthropic");
     expect(result.success).toBe(false);
+  });
+});
+
+describe("suggestAtsCompanies", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getCurrentUser as any).mockResolvedValue(user);
+    (getWatchedBoards as any).mockResolvedValue([]);
+  });
+
+  it("returns empty when unauthenticated", async () => {
+    (getCurrentUser as any).mockResolvedValue(null);
+    const { companies } = await suggestAtsCompanies({
+      provider: "greenhouse",
+      keywords: ["lyft"],
+    });
+    expect(companies).toEqual([]);
+  });
+
+  it("ranks seed hits from keywords and includes watchlist", async () => {
+    (getWatchedBoards as any).mockResolvedValue([
+      {
+        id: "1",
+        name: "Anthropic",
+        token: "anthropic",
+        provider: "greenhouse",
+      },
+    ]);
+
+    const { companies } = await suggestAtsCompanies({
+      provider: "greenhouse",
+      keywords: ["lyft"],
+      limit: 10,
+    });
+
+    expect(companies.some((c) => c.token === "anthropic")).toBe(true);
+    expect(
+      companies.find((c) => c.token === "anthropic")?.reasons,
+    ).toContain("watchlist");
+    expect(
+      companies.some((c) => c.name.toLowerCase().includes("lyft")),
+    ).toBe(true);
+  });
+
+  it("caps limit at ATS_MAX_COMPANIES", async () => {
+    (getWatchedBoards as any).mockResolvedValue(
+      Array.from({ length: 40 }, (_, i) => ({
+        id: String(i),
+        name: `Watched ${i}`,
+        token: `watched-${i}`,
+        provider: "lever",
+      })),
+    );
+
+    const { companies } = await suggestAtsCompanies({
+      provider: "lever",
+      limit: 100,
+    });
+    expect(companies.length).toBeLessThanOrEqual(
+      APP_CONSTANTS.ATS_MAX_COMPANIES,
+    );
   });
 });
 
