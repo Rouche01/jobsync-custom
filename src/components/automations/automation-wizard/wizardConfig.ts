@@ -16,7 +16,11 @@ export const EMPTY_ATS: AtsConfigValue = {
 
 export const STEPS = [
   { id: "basics", title: "Basics", description: "Name your automation" },
-  { id: "search", title: "Search", description: "Configure search criteria" },
+  {
+    id: "search",
+    title: "Search",
+    description: "Criteria, suggested companies, then confirm",
+  },
   { id: "resume", title: "Resume", description: "Select resume for matching" },
   { id: "matching", title: "Matching", description: "Set match threshold" },
   { id: "schedule", title: "Schedule", description: "When to run" },

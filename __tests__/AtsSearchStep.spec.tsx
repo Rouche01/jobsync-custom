@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AtsSearchStep } from "@/components/automations/AtsSearchStep";
 import { toastInfo } from "@/lib/toast";
+import { suggestAtsCompanies } from "@/actions/atsCompany.actions";
 
 vi.mock("@/actions/atsCompany.actions", () => ({
   searchAtsCompanies: vi
@@ -9,6 +10,7 @@ vi.mock("@/actions/atsCompany.actions", () => ({
     .mockResolvedValue({ companies: [], hasMore: false }),
   getAtsCompanyCount: vi.fn().mockResolvedValue(0),
   resolveAtsBoard: vi.fn(),
+  suggestAtsCompanies: vi.fn().mockResolvedValue({ companies: [] }),
 }));
 
 vi.mock("@/actions/company.actions", () => ({
@@ -135,5 +137,105 @@ describe("AtsSearchStep batch add", () => {
     await clickAddAll();
 
     expect(toastInfo).toHaveBeenCalledWith(expect.stringMatching(/2 skipped/i));
+  });
+});
+
+describe("AtsSearchStep company suggestions", () => {
+  const user = userEvent.setup();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    (suggestAtsCompanies as any).mockResolvedValue({
+      companies: [
+        {
+          name: "Lyft",
+          token: "lyft",
+          score: 10,
+          reasons: ["keyword"],
+        },
+        {
+          name: "Acme",
+          token: "acme",
+          score: 100,
+          reasons: ["watchlist"],
+        },
+      ],
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows suggested companies after criteria debounce and adds one", async () => {
+    const onChange = vi.fn();
+    render(
+      <AtsSearchStep
+        provider="greenhouse"
+        value={
+          {
+            companies: [],
+            targetTitles: [],
+            keywords: ["lyft"],
+            locations: [],
+            strictLocation: false,
+            topK: 10,
+            saveUnanalyzed: true,
+          } as any
+        }
+        onChange={onChange}
+      />,
+    );
+
+    await vi.advanceTimersByTimeAsync(350);
+
+    expect(suggestAtsCompanies).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: "greenhouse",
+        keywords: ["lyft"],
+      }),
+    );
+
+    const addButtons = await screen.findAllByRole("button", { name: /^add$/i });
+    await user.click(addButtons[0]);
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        companies: [expect.objectContaining({ token: "lyft" })],
+      }),
+    );
+  });
+
+  it("adds all suggested companies in one onChange", async () => {
+    const onChange = vi.fn();
+    render(
+      <AtsSearchStep
+        provider="greenhouse"
+        value={
+          {
+            companies: [],
+            keywords: ["lyft"],
+            targetTitles: [],
+            locations: [],
+            strictLocation: false,
+            topK: 10,
+            saveUnanalyzed: true,
+          } as any
+        }
+        onChange={onChange}
+      />,
+    );
+
+    await vi.advanceTimersByTimeAsync(350);
+
+    await user.click(
+      await screen.findByRole("button", { name: /add all suggested/i }),
+    );
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0][0].companies.map((c: any) => c.token)).toEqual(
+      ["lyft", "acme"],
+    );
   });
 });

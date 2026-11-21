@@ -3,6 +3,7 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import type { JobBoard, LeverCompany } from "@/models/automation.model";
 import { CompanyPicker } from "./ats-search-step/CompanyPicker";
+import { CompanySuggestions } from "./ats-search-step/CompanySuggestions";
 import { TargetingFields } from "./ats-search-step/TargetingFields";
 import { RunOptionsFields } from "./ats-search-step/RunOptionsFields";
 import type { AtsConfigValue } from "./ats-search-step/types";
@@ -47,6 +48,14 @@ export function AtsSearchStep({ provider, value, onChange }: AtsSearchStepProps)
 
   return (
     <div className="space-y-5">
+      <TargetingFields value={value} onChange={onChange} />
+      <CompanySuggestions
+        provider={provider}
+        value={value}
+        selected={companies}
+        onAdd={addCompany}
+        onAddMany={addManyCompanies}
+      />
       <CompanyPicker
         provider={provider}
         companies={companies}
@@ -54,7 +63,6 @@ export function AtsSearchStep({ provider, value, onChange }: AtsSearchStepProps)
         onAddMany={addManyCompanies}
         onRemove={removeCompany}
       />
-      <TargetingFields value={value} onChange={onChange} />
       <RunOptionsFields value={value} onChange={onChange} />
     </div>
   );
