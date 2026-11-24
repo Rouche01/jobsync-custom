@@ -69,8 +69,10 @@ export function AutomationWizard({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
+      {/* Scroll lives on an inner pane so DialogContent keeps its p-6 inset;
+          overflow on the dialog itself parks the scrollbar on the border. */}
+      <DialogContent className="flex max-h-[90vh] flex-col gap-4 overflow-hidden sm:max-w-2xl">
+        <DialogHeader className="shrink-0 space-y-1.5 pr-8">
           <DialogTitle>
             {editAutomation ? "Edit Automation" : "Create Automation"}
           </DialogTitle>
@@ -79,7 +81,7 @@ export function AutomationWizard({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-center gap-1 mb-4">
+        <div className="mb-0 flex shrink-0 justify-center gap-1">
           {STEPS.map((_, i) => (
             <div
               key={i}
@@ -92,6 +94,7 @@ export function AutomationWizard({
 
         <Form {...form}>
           <form
+            className="flex min-h-0 flex-1 flex-col gap-4"
             onSubmit={form.handleSubmit((data) => {
               if (
                 selectedResume &&
@@ -110,7 +113,7 @@ export function AutomationWizard({
           >
             {/* Every step stays mounted — hiding rather than unmounting keeps
                 each step's field state alive while navigating. */}
-            <div className="py-4">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-1">
               <div className={step === 0 ? "space-y-4" : "hidden"}>
                 <StepBasics form={form} />
               </div>
@@ -150,7 +153,7 @@ export function AutomationWizard({
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="shrink-0 gap-2">
               {step > 0 && (
                 <Button type="button" variant="outline" onClick={prevStep}>
                   <ChevronLeft className="h-4 w-4 mr-1" />
