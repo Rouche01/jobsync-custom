@@ -5,7 +5,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabQueryParam } from "@/hooks/useTabQueryParam";
 import { Badge } from "@/components/ui/badge";
-import { isRetiredBoard } from "@/models/automation.model";
+import {
+  isRetiredBoard,
+  type AutomationWithResume,
+} from "@/models/automation.model";
 import { DiscoveredJobsList } from "@/components/automations/DiscoveredJobsList";
 import { DiscoveredJobDetail } from "@/components/automations/DiscoveredJobDetail";
 import { RunHistoryList } from "@/components/automations/RunHistoryList";
@@ -91,12 +94,15 @@ export function AutomationDetailContainer({
 
   const [jobsBusy, setJobsBusy] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [duplicateFrom, setDuplicateFrom] =
+    useState<AutomationWithResume | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   // Deep link from a board-unreachable notification.
   useEffect(() => {
     if (searchParams.get("edit") !== "1" || !automation) return;
+    setDuplicateFrom(null);
     setWizardOpen(true);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("edit");
@@ -134,7 +140,15 @@ export function AutomationDetailContainer({
         actionLoading={actionLoading}
         jobsBusy={jobsBusy}
         onRefresh={() => loadData(true)}
-        onEdit={() => setWizardOpen(true)}
+        onEdit={() => {
+          setDuplicateFrom(null);
+          setWizardOpen(true);
+        }}
+        onDuplicate={() => {
+          if (!automation) return;
+          setDuplicateFrom(automation);
+          setWizardOpen(true);
+        }}
         onDelete={() => setDeleteConfirmOpen(true)}
         onPauseResume={handlePauseResume}
         onAbort={() => setAbortConfirmOpen(true)}
@@ -215,11 +229,15 @@ export function AutomationDetailContainer({
 
       <AutomationWizard
         open={wizardOpen}
-        onOpenChange={setWizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) setDuplicateFrom(null);
+        }}
         resumes={resumes}
         automations={allAutomations}
         onSuccess={() => loadData()}
-        editAutomation={automation}
+        editAutomation={duplicateFrom ? null : automation}
+        duplicateFrom={duplicateFrom}
       />
     </div>
   );

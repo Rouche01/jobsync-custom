@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   PlayCircle,
   Pencil,
+  Copy,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface AutomationDetailHeaderProps {
   jobsBusy: boolean;
   onRefresh: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   onPauseResume: () => void;
   onAbort: () => void;
@@ -41,6 +43,7 @@ export function AutomationDetailHeader({
   jobsBusy,
   onRefresh,
   onEdit,
+  onDuplicate,
   onDelete,
   onPauseResume,
   onAbort,
@@ -80,6 +83,12 @@ export function AutomationDetailHeader({
           <Button variant="outline" onClick={onEdit}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
+          </Button>
+        )}
+        {!retired && (
+          <Button variant="outline" onClick={onDuplicate}>
+            <Copy className="h-4 w-4 mr-2" />
+            Duplicate
           </Button>
         )}
         <Button

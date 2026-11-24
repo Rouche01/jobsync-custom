@@ -31,6 +31,8 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editAutomation, setEditAutomation] =
     useState<AutomationWithResume | null>(null);
+  const [duplicateFrom, setDuplicateFrom] =
+    useState<AutomationWithResume | null>(null);
   const autoOpenHandled = useRef(false);
 
   const loadAutomations = useCallback(async () => {
@@ -64,7 +66,20 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
   }, [router, searchParams]);
 
   const handleEdit = (automation: AutomationWithResume) => {
+    setDuplicateFrom(null);
     setEditAutomation(automation);
+    setWizardOpen(true);
+  };
+
+  const handleDuplicate = (automation: AutomationWithResume) => {
+    setEditAutomation(null);
+    setDuplicateFrom(automation);
+    setWizardOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditAutomation(null);
+    setDuplicateFrom(null);
     setWizardOpen(true);
   };
 
@@ -72,6 +87,7 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
     setWizardOpen(open);
     if (!open) {
       setEditAutomation(null);
+      setDuplicateFrom(null);
     }
   };
 
@@ -88,7 +104,7 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
             <Button variant="outline" size="icon" onClick={loadAutomations}>
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => setWizardOpen(true)}>
+            <Button variant="outline" onClick={handleCreate}>
               <Plus className="h-4 w-4 mr-2" />
               Create Automation
             </Button>
@@ -101,6 +117,7 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
             <AutomationList
               automations={automations}
               onEdit={handleEdit}
+              onDuplicate={handleDuplicate}
               onRefresh={loadAutomations}
             />
           )}
@@ -114,6 +131,7 @@ export function AutomationContainer({ resumes }: AutomationContainerProps) {
         automations={automations}
         onSuccess={handleSuccess}
         editAutomation={editAutomation}
+        duplicateFrom={duplicateFrom}
       />
     </>
   );

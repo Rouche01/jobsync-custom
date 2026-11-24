@@ -18,6 +18,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { CreateAutomationInput } from "@/models/automation.schema";
+import type { JobBoard } from "@/models/automation.model";
+import { migrateAtsConfigOnBoardChange } from "./wizardConfig";
 
 export function StepBasics({
   form,
@@ -48,7 +50,25 @@ export function StepBasics({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Job Board</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select
+              value={field.value}
+              onValueChange={(next) => {
+                const prev = field.value as JobBoard;
+                const to = next as JobBoard;
+                field.onChange(to);
+                if (prev !== to) {
+                  form.setValue(
+                    "sourceConfig",
+                    migrateAtsConfigOnBoardChange(
+                      form.getValues("sourceConfig"),
+                      prev,
+                      to,
+                    ),
+                    { shouldValidate: true },
+                  );
+                }
+              }}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a job board" />
@@ -63,7 +83,8 @@ export function StepBasics({
               </SelectContent>
             </Select>
             <FormDescription>
-              Track specific companies&apos; job boards
+              Track specific companies&apos; job boards. Changing board keeps
+              your criteria but clears companies (tokens differ per board).
             </FormDescription>
             <FormMessage />
           </FormItem>

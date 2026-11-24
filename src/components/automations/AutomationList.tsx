@@ -28,6 +28,7 @@ import {
   Pause,
   Play,
   Pencil,
+  Copy,
   Trash2,
   Clock,
   FileText,
@@ -47,12 +48,14 @@ import Link from "next/link";
 interface AutomationListProps {
   automations: AutomationWithResume[];
   onEdit: (automation: AutomationWithResume) => void;
+  onDuplicate: (automation: AutomationWithResume) => void;
   onRefresh: () => void;
 }
 
 export function AutomationList({
   automations,
   onEdit,
+  onDuplicate,
   onRefresh,
 }: AutomationListProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -307,6 +310,12 @@ export function AutomationList({
                       <DropdownMenuItem onClick={() => onEdit(automation)}>
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDuplicate(automation)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </>

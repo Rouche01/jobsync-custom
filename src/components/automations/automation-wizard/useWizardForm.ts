@@ -17,6 +17,7 @@ import type { AtsConfigValue } from "../AtsSearchStep";
 import {
   EMPTY_ATS,
   STEPS,
+  buildDuplicateDefaults,
   parseEditSourceConfig,
   type AtsKey,
 } from "./wizardConfig";
@@ -27,6 +28,34 @@ interface UseWizardFormArgs {
   automations: AutomationWithResume[];
   onSuccess: () => void;
   editAutomation?: AutomationWithResume | null;
+  /** Prefills create mode; never updates the source automation. */
+  duplicateFrom?: AutomationWithResume | null;
+}
+
+function blankDefaults(): CreateAutomationInput {
+  return {
+    name: "",
+    jobBoard: "greenhouse",
+    keywords: "",
+    location: "",
+    sourceConfig: undefined,
+    resumeId: "",
+    matchThreshold: 80,
+    scheduleHour: 8,
+  };
+}
+
+function editDefaults(source: AutomationWithResume): CreateAutomationInput {
+  return {
+    name: source.name,
+    jobBoard: source.jobBoard as JobBoard,
+    keywords: source.keywords ?? "",
+    location: source.location ?? "",
+    sourceConfig: parseEditSourceConfig(source.sourceConfig),
+    resumeId: source.resumeId,
+    matchThreshold: source.matchThreshold,
+    scheduleHour: source.scheduleHour,
+  };
 }
 
 export function useWizardForm({
@@ -35,56 +64,53 @@ export function useWizardForm({
   automations,
   onSuccess,
   editAutomation,
+  duplicateFrom,
 }: UseWizardFormArgs) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!editAutomation;
+
+  const initialValues = editAutomation
+    ? editDefaults(editAutomation)
+    : duplicateFrom
+      ? buildDuplicateDefaults(duplicateFrom)
+      : blankDefaults();
 
   const form = useForm<CreateAutomationInput>({
     resolver: zodResolver(CreateAutomationSchema),
     mode: "onChange",
-    defaultValues: {
-      name: editAutomation?.name ?? "",
-      jobBoard: (editAutomation?.jobBoard as JobBoard) ?? "greenhouse",
-      keywords: editAutomation?.keywords ?? "",
-      location: editAutomation?.location ?? "",
-      sourceConfig: parseEditSourceConfig(editAutomation?.sourceConfig),
-      resumeId: editAutomation?.resumeId ?? "",
-      matchThreshold: editAutomation?.matchThreshold ?? 80,
-      scheduleHour: editAutomation?.scheduleHour ?? 8,
-    },
+    defaultValues: initialValues,
   });
 
   useEffect(() => {
     if (open) {
-      form.reset({
-        name: editAutomation?.name ?? "",
-        jobBoard: (editAutomation?.jobBoard as JobBoard) ?? "greenhouse",
-        keywords: editAutomation?.keywords ?? "",
-        location: editAutomation?.location ?? "",
-        sourceConfig: parseEditSourceConfig(editAutomation?.sourceConfig),
-        resumeId: editAutomation?.resumeId ?? "",
-        matchThreshold: editAutomation?.matchThreshold ?? 80,
-        scheduleHour: editAutomation?.scheduleHour ?? 8,
-      });
+      form.reset(
+        editAutomation
+          ? editDefaults(editAutomation)
+          : duplicateFrom
+            ? buildDuplicateDefaults(duplicateFrom)
+            : blankDefaults(),
+      );
       setStep(0);
     }
-  }, [open, editAutomation, form]);
+  }, [open, editAutomation, duplicateFrom, form]);
 
   const formValues = form.watch();
 
   const onSubmit = async (data: CreateAutomationInput) => {
     setIsSubmitting(true);
     try {
-      const result = editAutomation
+      // Duplicate always creates; only editAutomation updates in place.
+      const result = isEditing
         ? await updateAutomation(editAutomation.id, data)
         : await createAutomation(data);
 
       if (result.success) {
         toastSuccess(
-          editAutomation
+          isEditing
             ? "Your automation has been updated successfully."
             : "Your automation has been created and will run at the scheduled time.",
-          editAutomation ? "Automation updated" : "Automation created",
+          isEditing ? "Automation updated" : "Automation created",
         );
         form.reset();
         setStep(0);
@@ -122,6 +148,7 @@ export function useWizardForm({
 
   // Hours already claimed by the user's other automations. Only one automation
   // may run per hourly slot, so the schedule step rejects a taken hour.
+  // Duplicate keeps the source hour "taken" so the user picks a free slot.
   const takenHours = new Set(
     automations
       .filter((a) => a.id !== editAutomation?.id)
@@ -161,6 +188,8 @@ export function useWizardForm({
     formValues,
     step,
     isSubmitting,
+    isEditing,
+    isDuplicating: !!duplicateFrom && !isEditing,
     atsKey,
     atsConfig,
     takenHours,

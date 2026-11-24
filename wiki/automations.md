@@ -19,7 +19,7 @@ It only reads **Greenhouse**, **Lever** and **Ashby** boards — not the whole i
 
 ## How do I create an automation?
 
-Open **Automations** and click **Create Automation**. The wizard has six steps:
+Open **Automations** and click **Create Automation**. To reuse an existing one (for example on another board), use **Duplicate** from the list **⋮** menu or the detail header — the wizard opens prefilled so you can change the board, companies, schedule, and other fields before creating a new automation. The wizard has six steps:
 
 1. **Basics** — name and job board (Greenhouse, Lever or Ashby).
 2. **Search** — criteria first (titles, keywords, locations, run options), then confirm suggested or manually picked companies (up to 25).

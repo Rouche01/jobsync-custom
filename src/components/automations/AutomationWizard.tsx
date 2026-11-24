@@ -34,6 +34,8 @@ interface AutomationWizardProps {
   automations: AutomationWithResume[];
   onSuccess: () => void;
   editAutomation?: AutomationWithResume | null;
+  /** Opens create mode prefilled from this automation; save creates a new one. */
+  duplicateFrom?: AutomationWithResume | null;
 }
 
 export function AutomationWizard({
@@ -43,12 +45,15 @@ export function AutomationWizard({
   automations,
   onSuccess,
   editAutomation,
+  duplicateFrom,
 }: AutomationWizardProps) {
   const {
     form,
     formValues,
     step,
     isSubmitting,
+    isEditing,
+    isDuplicating,
     atsKey,
     atsConfig,
     takenHours,
@@ -63,9 +68,16 @@ export function AutomationWizard({
     automations,
     onSuccess,
     editAutomation,
+    duplicateFrom,
   });
 
   const selectedResume = resumes.find((r) => r.id === formValues.resumeId);
+
+  const dialogTitle = isEditing
+    ? "Edit Automation"
+    : isDuplicating
+      ? "Duplicate Automation"
+      : "Create Automation";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -73,11 +85,12 @@ export function AutomationWizard({
           overflow on the dialog itself parks the scrollbar on the border. */}
       <DialogContent className="flex max-h-[90vh] flex-col gap-4 overflow-hidden sm:max-w-2xl">
         <DialogHeader className="shrink-0 space-y-1.5 pr-8">
-          <DialogTitle>
-            {editAutomation ? "Edit Automation" : "Create Automation"}
-          </DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
             Step {step + 1} of {STEPS.length}: {STEPS[step].description}
+            {isDuplicating
+              ? " — Review and change anything before creating."
+              : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,7 +187,7 @@ export function AutomationWizard({
                   {isSubmitting && (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   )}
-                  {editAutomation ? "Update" : "Create"} Automation
+                  {isEditing ? "Update" : "Create"} Automation
                 </Button>
               )}
             </DialogFooter>

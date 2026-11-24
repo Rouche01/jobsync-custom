@@ -1,5 +1,10 @@
 import { APP_CONSTANTS } from "@/lib/constants";
 import type { CreateAutomationInput } from "@/models/automation.schema";
+import type {
+  AutomationWithResume,
+  JobBoard,
+  SourceConfig,
+} from "@/models/automation.model";
 import type { AtsConfigValue } from "../AtsSearchStep";
 
 export type AtsKey = "greenhouse" | "lever" | "ashby";
@@ -13,6 +18,43 @@ export const EMPTY_ATS: AtsConfigValue = {
   topK: APP_CONSTANTS.MAX_JOBS_PER_RUN,
   saveUnanalyzed: true,
 };
+
+/** Criteria carry over when the board changes; company tokens do not. */
+export function migrateAtsConfigOnBoardChange(
+  current: SourceConfig | undefined,
+  from: JobBoard,
+  to: JobBoard,
+): SourceConfig {
+  if (from === to) return current ?? {};
+  const prev = current?.[from];
+  return {
+    [to]: {
+      companies: [],
+      targetTitles: prev?.targetTitles ?? [],
+      keywords: prev?.keywords ?? [],
+      locations: prev?.locations ?? [],
+      strictLocation: prev?.strictLocation ?? false,
+      topK: prev?.topK ?? APP_CONSTANTS.MAX_JOBS_PER_RUN,
+      saveUnanalyzed: prev?.saveUnanalyzed ?? true,
+    },
+  };
+}
+
+/** Prefill create-wizard defaults from an existing automation (does not save). */
+export function buildDuplicateDefaults(
+  source: AutomationWithResume,
+): CreateAutomationInput {
+  return {
+    name: `Copy of ${source.name}`.slice(0, 100),
+    jobBoard: source.jobBoard as JobBoard,
+    keywords: source.keywords ?? "",
+    location: source.location ?? "",
+    sourceConfig: parseEditSourceConfig(source.sourceConfig),
+    resumeId: source.resumeId,
+    matchThreshold: source.matchThreshold,
+    scheduleHour: source.scheduleHour,
+  };
+}
 
 export const STEPS = [
   { id: "basics", title: "Basics", description: "Name your automation" },
