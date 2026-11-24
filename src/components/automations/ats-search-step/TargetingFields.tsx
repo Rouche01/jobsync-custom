@@ -86,8 +86,8 @@ export function TargetingFields({ value, onChange }: TargetingFieldsProps) {
         }}
       />
 
-      <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
-        <div className="space-y-1">
+      <div className="flex min-w-0 items-start justify-between gap-4 rounded-lg border p-3">
+        <div className="min-w-0 flex-1 space-y-1">
           <Label>Only show jobs in these locations</Label>
           <p className="text-sm text-muted-foreground">
             When on, jobs matching none of your locations are dropped before
@@ -95,6 +95,7 @@ export function TargetingFields({ value, onChange }: TargetingFieldsProps) {
           </p>
         </div>
         <Switch
+          className="shrink-0"
           checked={!!value.strictLocation}
           disabled={(value.locations ?? []).length === 0}
           onCheckedChange={(checked) =>

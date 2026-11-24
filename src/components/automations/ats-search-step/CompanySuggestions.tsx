@@ -96,10 +96,10 @@ export function CompanySuggestions({
   };
 
   return (
-    <div className="space-y-2 rounded-md border p-3">
-      <div className="flex items-center justify-between gap-2">
-        <Label className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+    <div className="min-w-0 space-y-2 rounded-md border p-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <Label className="flex min-w-0 items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           Suggested companies
         </Label>
         {unselected.length > 0 && (
@@ -107,7 +107,7 @@ export function CompanySuggestions({
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs"
+            className="h-7 shrink-0 px-2 text-xs"
             disabled={atLimit}
             onClick={addAllSuggested}
           >
@@ -137,15 +137,15 @@ export function CompanySuggestions({
       )}
 
       {!loading && unselected.length > 0 && (
-        <ul className="max-h-48 space-y-1 overflow-y-auto">
+        <ul className="max-h-48 min-w-0 space-y-1 overflow-y-auto overflow-x-hidden">
           {unselected.map((c) => (
             <li
               key={c.token}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60"
+              className="flex min-w-0 flex-wrap items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted/60"
             >
               <button
                 type="button"
-                className="min-w-0 flex-1 text-left"
+                className="min-w-0 flex-1 truncate text-left"
                 disabled={atLimit}
                 onClick={() => onAdd(toLeverCompany(c))}
               >
@@ -154,7 +154,7 @@ export function CompanySuggestions({
                   {c.token}
                 </span>
               </button>
-              <div className="flex shrink-0 flex-wrap gap-1">
+              <div className="flex min-w-0 flex-wrap gap-1">
                 {c.reasons.map((r) => (
                   <Badge key={r} variant="outline" className="font-normal">
                     {REASON_LABEL[r] ?? r}
