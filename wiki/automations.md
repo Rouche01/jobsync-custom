@@ -13,101 +13,71 @@ stale_after: 2027-09-30
 
 ## What does an automation do?
 
-An automation is a saved search that runs once a day and brings new job postings to you. You start with **what you want** (titles, keywords, locations and a resume). JobSync then helps you **confirm a shortlist of companies** whose public boards it will read. On each run it drops listings that do not match your filters, scores the most promising ones against your resume with your AI provider, and saves the results as **discovered jobs** you can accept into your tracker or dismiss.
+An automation is a saved search that runs once a day. You start with **what you want** (titles, keywords, locations and a resume). JobSync helps you **confirm a shortlist of companies**, then reads those public boards, filters listings, scores the best ones against your resume, and saves **discovered jobs** you can accept or dismiss.
 
-JobSync still reads employer boards hosted by **Greenhouse**, **Lever** and **Ashby** — it does not search the whole internet. One automation covers one of those three boards; create a second automation if you want companies on another. At least one company must be confirmed before save; the board APIs are per-company.
-
-An automation needs an AI provider and model set under **Settings → AI Provider**, and a resume in your profile to match against.
+It only reads **Greenhouse**, **Lever** and **Ashby** boards — not the whole internet. One automation covers one board; create another for a different provider. At least one company is required. You also need **Settings → AI Provider** and a resume to match against.
 
 ## How do I create an automation?
 
-Open **Automations** in the sidebar and click **Create Automation**. The wizard has six steps:
+Open **Automations** and click **Create Automation**. The wizard has six steps:
 
-1. **Basics** — a name, and which job board (Greenhouse, Lever or Ashby) the companies live on.
-2. **Search** — criteria first, then companies. Fill in target job titles, keywords/skills, locations and run options; JobSync suggests companies from those titles/keywords plus your watchlist. Confirm suggestions (or pick manually), up to 25. This is the step that decides how useful the automation is; see the next two sections.
-3. **Resume** — the resume every discovered job is scored against. Resumes with fewer than two sections are shown greyed out with an alert icon until you fill them in under **Profile**; an attached file does not count.
-4. **Matching** — a match threshold. Only listings whose AI match score reaches it are saved; anything analyzed and scored below it is discarded.
-5. **Schedule** — the hour of the day the automation runs (server time). Only one automation may occupy an hour, so hours already taken are marked **In use** and rejected.
+1. **Basics** — name and job board (Greenhouse, Lever or Ashby).
+2. **Search** — criteria first (titles, keywords, locations, run options), then confirm suggested or manually picked companies (up to 25).
+3. **Resume** — the resume used for scoring. Resumes with fewer than two sections are greyed out until you fill them in under **Profile**.
+4. **Matching** — match threshold; below-threshold AI scores are discarded.
+5. **Schedule** — daily hour (server time). Hours already taken are marked **In use**.
 6. **Review** — confirm and save.
 
-At least one company is required. Everything else has a working default, but defaults alone will not give you good results — empty titles and keywords mean nothing to rank against.
+At least one company is required. Empty titles and keywords leave nothing to rank against, so defaults alone rarely help.
 
 ## Which companies can I track, and how many?
 
-Up to **25 companies** per automation. In the Search step, after you enter titles or keywords (or if you have a watchlist), a **Suggested companies** list appears. Add one, or **Add all suggested**. Suggestions are ranked from name/token matches against your criteria and from boards you already watch — they are a shortlist to confirm, not a live scrape of every board.
+Up to **25** per automation. After you enter titles or keywords (or if you have a watchlist), **Suggested companies** appears — add one or **Add all suggested**. Suggestions rank name/token matches plus watched boards; they are a shortlist to confirm, not a full-directory scrape.
 
-Locations do **not** choose which companies are suggested. The ATS directory has no company geography; locations only filter **job listings** when you turn on **Only show jobs in these locations** (see filters below).
+Locations do **not** pick companies (the ATS directory has no geo). They only filter **job listings** when **Only show jobs in these locations** is on.
 
-You can still pick companies by hand: open the company picker and type a name — JobSync searches the indexed directory for that provider — or use **Add all watched** in the picker for boards you watch on that automation's job board. Only companies on the matching board appear; a watchlist spanning all three providers contributes a different subset to each automation.
-
-If a company is not in the directory, add it by hand: paste its board URL (for example `https://boards.greenhouse.io/acme` or `https://jobs.lever.co/acme`) or just its board token into the field below the picker, and press **+**. JobSync resolves it, checks the board really exists, and adds it as a chip. Remove any company with the **×** on its chip.
-
-You can also build a shortlist ahead of time. Open **Library → Companies**, switch the scope dropdown from **My Companies** to **Greenhouse**, **Lever** or **Ashby** under *Browse boards*, and you get the full directory of boards JobSync knows about for that provider — search it, and click **Watch** on any company you care about. Watched companies collect under the **Watchlist** scope, where each row links straight to the live board so you can check whether it is still posting. Watched boards also rise in **Suggested companies**.
-
-Watching a company adds it to your Library, so a company you already track just gains its board link — JobSync asks you to confirm that first. Unwatching only removes it from the watchlist; the company stays in your Library along with any jobs attached to it.
+You can still search the directory, use **Add all watched**, or paste a board URL/token under the picker. Watch boards ahead of time under **Library → Companies** → *Browse boards*; watched boards also rise in suggestions. Unwatching removes them from the watchlist only — the company stays in your Library.
 
 ## How do I set up filters so the automation returns good results?
 
-**Fill in the filters first. This is the single biggest factor in whether an automation is useful** — and it is what drives company suggestions. A company board can carry hundreds of listings across every department; the filters are what turn that into a short list worth your attention.
+**Fill in filters first** — they drive both ranking and company suggestions. A board can list hundreds of roles; filters turn that into a short list.
 
-- **Target job titles** — the roles you actually want, e.g. `Frontend Engineer`, `Staff Software Engineer`. A listing whose title matches one of these ranks far higher than one that does not. Titles also help suggest companies whose names or board tokens overlap those words.
-- **Keywords / skills** — the technologies and terms that describe your work, e.g. `React`, `TypeScript`, `Kubernetes`. These are matched against both the title and the full description, so they catch good roles whose title is worded oddly. Keywords likewise feed company suggestions.
-- **Locations** — the cities, provinces/states or countries you would work in, e.g. `Calgary`, `Seattle`, `San Francisco`, `Canada`. Locations do **not** affect company suggestions or listing ranking on their own. They only take effect when you turn on **Only show jobs in these locations**, which drops non-matching listings before ranking. Avoid adding `Remote` here: a listing matches if its location text contains any of your entries, so `Remote` lets through remote roles anywhere in the world, including places you cannot work.
+- **Target job titles** — roles you want (e.g. `Frontend Engineer`). Title matches rank higher and can suggest companies with overlapping names/tokens.
+- **Keywords / skills** — e.g. `React`, `Kubernetes`. Matched against title and description; also feed suggestions.
+- **Locations** — e.g. `Calgary`, `Canada`. Used only with **Only show jobs in these locations**. Avoid bare `Remote` — it matches remote roles anywhere.
 
-Add several of each rather than one. Specific terms count for more than generic ones — `kubernetes` is worth more than `engineer`, which appears in almost every listing.
-
-Leaving both target titles and keywords empty is the common mistake: with nothing to rank against, every listing fails the relevance floor and the run saves nothing. The wizard shows an amber warning when both are empty.
+Prefer several specific terms over one generic word. Leaving both titles and keywords empty fails the relevance floor and saves nothing; the wizard warns when both are empty.
 
 ## Why does my matching resume need a skills section?
 
-Because the skills on your resume are used as extra keywords when listings are ranked. Every skill tag in your resume's **Skills** section is added to the keywords you typed in the wizard, so a resume with a well-filled skills section widens what the automation can recognise without you having to type every term twice.
+Resume **Skills** are added to your keywords for ranking and sent to the AI for scoring. Discovered jobs can also be tagged with resume skills that appear in the posting (at most ten; no invented tags).
 
-The skills section also goes into the text handed to the AI for the match score, so it improves the scoring as well as the shortlisting.
+Write skills the way ads do. Bracket notes are ignored (`Angular (v10–14)` still matches "Angular"). Combined labels like **C# / .NET** match nothing — list them separately.
 
-Your skills are also used to tag the jobs a run discovers. When a saved listing's title or description mentions one of your resume skills, that skill is added to the job as a tag, so the job's detail page shows at a glance which of your skills the posting asks for. Only skills already on your resume are used — a run never invents a new tag — and each job gets at most ten.
-
-For a skill to be tagged, the posting has to mention it by name, so write your skills the way a job ad would. A note in brackets is ignored, so **Angular (v10–14)** still matches a posting that just says "Angular". But a skill written as two things at once — **C# / .NET**, **Agile/Scrum** — matches nothing, because no posting spells it that way. List those as separate skills instead. This helps the ranking too, which reads the same skill names.
-
-To add one, open **Profile**, open the resume you use for matching, and click **Add Skills**. Group your skills into categories (up to 8, with up to 20 skills each) — for example *Languages*, *Frameworks*, *Cloud* — and list the real technology names you would want a posting to mention.
-
-A resume with no skills section still works, but the automation then has only your typed keywords to go on. Pair a filled-in skills section with a good set of target titles and keywords for the best results.
+Add skills under **Profile** → your matching resume → **Add Skills** (up to 8 categories, 20 skills each). A resume without skills still works, but only your typed keywords apply.
 
 ## How many listings does each run analyze?
 
-Two tiers. **Jobs analyzed per run** (the slider in the Search step, default 10, maximum 50) is how many top-ranked listings get a full AI match score. Higher means more coverage but slower and, on a paid provider, costlier runs.
-
-**Save additional relevant listings** is on by default. With it on, relevant listings that did not make the cut are still saved, ranked but not yet AI-scored — they show a lexical relevance percentage and an **Analyze** button so you can score one on demand. Turn it off if you only want the scored shortlist.
-
-Listings only reach AI analysis if they are related to your search strongly enough to be worth the call — clearing the relevance floor on a single generic word is not enough. Of the ones that are analyzed, only those meeting your match threshold are saved. So a run can fetch hundreds of listings and save none: the run log shows how many were skipped as too weakly related and how many were analyzed but fell below the threshold.
+**Jobs analyzed per run** (default 10, max 50) is how many top-ranked listings get a full AI score. **Save additional relevant listings** (on by default) keeps lower-ranked relevant jobs unscored, with an **Analyze** button. Only listings clearing the relevance floor are analyzed; only those meeting your threshold are saved. The run log shows skips and below-threshold counts.
 
 ## When does it run, and can I run one now?
 
-An automation runs daily at the hour you chose, in the server's timezone, as long as its status is **active**. Open an automation to run it immediately with **Run Now** — manual runs are limited to **5 per hour**. A run in progress can be stopped with **Abort Run**.
-
-The automation's page has three tabs: **Logs** (live output from the current or most recent run), **Discovered Jobs**, and **Run History** (past runs with counts and timings).
+It runs daily at your chosen hour (server timezone) while **active**. **Run Now** is limited to **5 per hour**; **Abort Run** stops an in-progress run. The page tabs are **Logs**, **Discovered Jobs**, and **Run History**.
 
 ## What do I do with a discovered job?
 
-Every discovered job starts as **new**, with a due date three days from the day it was found — the same default as a job you add by hand, and accepting it keeps that date. Open the **Discovered Jobs** tab and, for each one, choose:
+New discoveries get a due date three days out. On **Discovered Jobs**:
 
-- **Accept** — copies it into your tracked jobs, where it behaves like any job you added by hand.
-- **Dismiss** — marks it dismissed so it stops cluttering the list. It is not deleted.
-- **Analyze** — appears on listings that were saved without an AI score, and scores one on demand.
+- **Accept** — copy into tracked jobs.
+- **Dismiss** — hide without deleting.
+- **Analyze** — score an unscored listing on demand.
 
-Click a job to open its details, including the AI match breakdown and, for unscored listings, the relevance breakdown that explains which of your titles and keywords it hit. The **Status** filter in the header narrows the list to new, accepted or dismissed, and **Clear** removes discovered jobs in bulk.
+Open a job for match/relevance detail. Filter by status; **Clear** removes discoveries in bulk.
 
 ## How do I pause, edit or delete an automation?
 
-From the list, use the **⋮** menu on any automation; from its own page, use the buttons in the header. **Pause** stops the daily schedule without losing the automation or the jobs it found — **Resume** starts it again. **Edit** reopens the wizard with everything pre-filled, which is where you go to widen filters that are returning too little.
-
-**Delete** removes the automation permanently, along with its runs and discovered jobs, after a confirmation. Accept anything you want to keep first.
-
-If an automation shows **Resume missing**, the resume it matched against was deleted — edit it and pick a new one before it can run again.
+Use the list **⋮** menu or the detail header. **Pause** / **Resume** toggles the schedule. **Edit** reopens the wizard. **Delete** removes the automation, runs and discoveries after confirm — accept keepers first. **Resume missing** means the linked resume was deleted; pick a new one before it can run.
 
 ## How do I know when a run finishes or a job board fails?
 
-The bell in the header tells you: it shows a count of unread notifications, red when something failed. The same count appears on **Notifications** in the account menu.
-
-Every finished run posts a summary of what it found, with a link to any new jobs; cancelled runs post nothing. A company board that could not be reached (removed, timed out or rate-limited) gets its own row, which comes back after each run until you fix it — **Edit watchlist** opens the automation's editor. If every board fails, the run is marked failed.
-
-The **×** in the bell only hides a row, and **Clear all** hides every row at once; the Notifications page (**View all notifications**, or the account menu) still lists it. On the page, **×** and **Clear read** delete for good, after asking you to confirm. Notifications are kept for 30 days.
+The header bell shows unread notifications (red on failure). Finished runs post a summary; cancelled runs do not. Unreachable boards get a repeating row until fixed — **Edit watchlist** opens the editor. If every board fails, the run fails. Bell **×** / **Clear all** only hide; the Notifications page deletes for good after confirm. Kept for 30 days.

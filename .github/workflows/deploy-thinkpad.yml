@@ -1,0 +1,66 @@
+# Redeploy JobSync on the ThinkPad after a push.
+#
+# Joins the Tailnet as tag:ci (same OAuth pattern as creatuuls-lp), then SSHs
+# to the ThinkPad Tailscale IP and rebuilds the local Docker image.
+# See docs/ci-tailscale-deploy.md
+
+name: Deploy ThinkPad
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "prisma/**"
+      - "scripts/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "docker-compose.override.yml"
+      - "docker-entrypoint.sh"
+      - "next.config.*"
+      - ".github/workflows/deploy-thinkpad.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-thinkpad
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          # Prefer Tailscale IP — MagicDNS often fails on GHA runners (same as creatuuls-lp).
+          ping: ${{ vars.THINKPAD_TAILSCALE_IP }}
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ vars.THINKPAD_TAILSCALE_IP }}
+          username: ${{ secrets.THINKPAD_USER }}
+          key: ${{ secrets.THINKPAD_SSH_KEY }}
+          # Builds can take a while on a ThinkPad.
+          command_timeout: 40m
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.THINKPAD_APP_DIR }}"
+            echo "Deploying in $(pwd) on $(hostname)"
+            git fetch origin
+            git checkout main
+            git pull --ff-only origin main
+            if [ ! -f docker-compose.override.yml ]; then
+              echo "::error::docker-compose.override.yml missing — refusing to pull GHCR-only image"
+              exit 1
+            fi
+            docker compose up -d --build --force-recreate
+            docker compose ps
+            echo "Deploy finished"
