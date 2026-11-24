@@ -1,16 +1,8 @@
 name: Publish Wiki
 
-# One-way: wiki/ is the source, the GitHub wiki is a rendering of it. Set the
-# wiki to collaborator-edit-only after the first successful publish so the two
-# cannot diverge.
+# Disabled for this fork — wiki/ stays in-repo only; we do not sync to GitHub wiki.
+# To re-enable: restore push paths on main (see upstream Gsync/jobsync) and remove `if: false`.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "wiki/**"
-      - "src/lib/wiki/**"
-      - "scripts/sync-wiki.mts"
-      - ".github/workflows/wiki.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,6 +14,7 @@ concurrency:
 
 jobs:
   publish:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
