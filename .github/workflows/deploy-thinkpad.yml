@@ -1,7 +1,8 @@
 # Redeploy JobSync on the ThinkPad after a push.
 #
-# Joins the Tailnet as tag:ci (same OAuth pattern as creatuuls-lp), then SSHs
-# to the ThinkPad Tailscale IP and rebuilds the local Docker image.
+# Joins the Tailnet as tag:ci (same OAuth pattern as creatuuls-lp), then uses
+# Tailscale SSH (not a classic deploy key) — the ThinkPad has Tailscale SSH on
+# :22, so appleboy/key auth gets "handshake failed: EOF".
 # See docs/ci-tailscale-deploy.md
 
 name: Deploy ThinkPad
@@ -42,25 +43,26 @@ jobs:
           # Prefer Tailscale IP — MagicDNS often fails on GHA runners (same as creatuuls-lp).
           ping: ${{ vars.THINKPAD_TAILSCALE_IP }}
 
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ vars.THINKPAD_TAILSCALE_IP }}
-          username: ${{ secrets.THINKPAD_USER }}
-          key: ${{ secrets.THINKPAD_SSH_KEY }}
-          # Builds can take a while on a ThinkPad.
-          command_timeout: 40m
-          script: |
-            set -euo pipefail
-            cd "${{ secrets.THINKPAD_APP_DIR }}"
-            echo "Deploying in $(pwd) on $(hostname)"
-            git fetch origin
-            git checkout main
-            git pull --ff-only origin main
-            if [ ! -f docker-compose.override.yml ]; then
-              echo "::error::docker-compose.override.yml missing — refusing to pull GHCR-only image"
-              exit 1
-            fi
-            docker compose up -d --build --force-recreate
-            docker compose ps
-            echo "Deploy finished"
+      - name: Deploy over Tailscale SSH
+        env:
+          HOST: ${{ vars.THINKPAD_TAILSCALE_IP }}
+          SSH_USER: ${{ secrets.THINKPAD_USER }}
+          APP_DIR: ${{ secrets.THINKPAD_APP_DIR }}
+        run: |
+          set -euo pipefail
+          # Tailscale SSH authenticates the CI node by identity (tag:ci), not a key.
+          # Requires ACL: grants tag:ci → tag:cms:22 AND ssh src tag:ci → tag:cms as SSH_USER.
+          tailscale ssh "${SSH_USER}@${HOST}" \
+            "set -euo pipefail
+             cd \"${APP_DIR}\"
+             echo \"Deploying in \$(pwd) on \$(hostname)\"
+             git fetch origin
+             git checkout main
+             git pull --ff-only origin main
+             if [ ! -f docker-compose.override.yml ]; then
+               echo 'docker-compose.override.yml missing — refusing to pull GHCR-only image' >&2
+               exit 1
+             fi
+             docker compose up -d --build --force-recreate
+             docker compose ps
+             echo Deploy finished"
