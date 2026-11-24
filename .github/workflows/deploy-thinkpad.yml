@@ -56,6 +56,8 @@ jobs:
             "set -euo pipefail
              cd \"${APP_DIR}\"
              echo \"Deploying in \$(pwd) on \$(hostname)\"
+             # Repo under /opt is often root-owned; CI user is not — avoid dubious ownership.
+             git config --global --add safe.directory \"${APP_DIR}\"
              git fetch origin
              git checkout main
              git pull --ff-only origin main
