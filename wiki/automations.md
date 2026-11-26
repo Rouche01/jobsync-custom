@@ -17,7 +17,7 @@ An automation is a saved search that runs once a day. You start with **what you 
 
 It only reads **Greenhouse**, **Lever**, **Ashby** and **Personio** boards — not the whole internet. One automation covers one board; create another for a different provider (or **Duplicate** an existing one and switch the board). At least one company is required. You also need **Settings → AI Provider** and a resume to match against.
 
-**Personio** is especially useful for German / DACH mid-market employers. Feeds prefer English posting copy and fall back to German when EN is empty. The seeded directory is a curated starter list — paste a `*.jobs.personio.de` / `.com` link or token to add boards that are not listed yet.
+**Personio** is especially useful for German / DACH mid-market employers. Feeds prefer English posting copy and fall back to German when EN is empty. The seeded directory is ~800 live-validated boards (refreshed with `node scripts/build-personio-seed.mjs --csv …`); paste a `*.jobs.personio.de` / `.com` link or token to add boards that are not listed yet.
 
 ## How do I create an automation?
 
