@@ -1,4 +1,4 @@
-import type { JobBoard, LeverHost } from "@/models/automation.model";
+import type { AtsCompanyHost, JobBoard } from "@/models/automation.model";
 import { CoverLetter, Resume } from "./profile.model";
 import type { JobContactLink } from "./contact.model";
 // Type-only: jobStage.model.ts imports Tag from here and has a runtime export,
@@ -104,7 +104,7 @@ export interface Company {
   watchedAt?: Date | null;
   atsProvider?: JobBoard | null;
   atsToken?: string | null;
-  atsHost?: LeverHost | null;
+  atsHost?: AtsCompanyHost | null;
   websiteUrl?: string | null;
   careersUrl?: string | null;
   industry?: string | null;

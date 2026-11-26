@@ -30,10 +30,19 @@ export interface GreenhouseSourceConfig {
 
 export type LeverHost = "default" | "eu";
 
+// Personio career pages live on either .jobs.personio.de or .jobs.personio.com;
+// persist which host resolved so runtime fetches never re-probe.
+export type PersonioHost = "de" | "com";
+
+// Persisted per-company host across ATS providers that need one (Lever, Personio).
+export type AtsCompanyHost = LeverHost | PersonioHost;
+
+// Shared picker/watchlist company row. `host` is Lever (default/eu) or
+// Personio (de/com) when the provider needs one; Greenhouse/Ashby omit it.
 export interface LeverCompany {
   name: string;
   token: string;
-  host?: LeverHost; // absent/"default" = the common case
+  host?: AtsCompanyHost;
 }
 
 // Field-identical to Greenhouse except `companies` carries the extra `host`.
@@ -53,10 +62,6 @@ export interface AshbySourceConfig
   extends Omit<GreenhouseSourceConfig, "companies"> {
   companies: AshbyCompany[];
 }
-
-// Personio career pages live on either .jobs.personio.de or .jobs.personio.com;
-// persist which host resolved so runtime fetches never re-probe.
-export type PersonioHost = "de" | "com";
 
 export interface PersonioCompany {
   name: string;

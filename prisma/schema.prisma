@@ -332,7 +332,7 @@ model Company {
   watched         Boolean          @default(false)
   watchedAt       DateTime?
 
-  // Board coordinates; atsHost is Lever-only
+  // Board coordinates; atsHost is Lever (default/eu) or Personio (de/com)
   atsProvider     String?
   atsToken        String?
   atsHost         String?

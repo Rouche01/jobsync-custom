@@ -1,8 +1,8 @@
 import { APP_CONSTANTS } from "@/lib/constants";
-import type { JobBoard } from "@/models/automation.model";
+import type { AtsCompanyHost, JobBoard } from "@/models/automation.model";
 
 export interface AtsRunConfig {
-  companies: { name: string; token: string; host?: "default" | "eu" }[];
+  companies: { name: string; token: string; host?: AtsCompanyHost }[];
   targetTitles: string[];
   keywords: string[];
   locations: string[];

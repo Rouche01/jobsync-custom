@@ -6,27 +6,35 @@ import { ATS_TOKEN_REGEX } from "@/lib/scraper/utils";
 import greenhouseSeed from "@/lib/scraper/greenhouse/companies.json";
 import leverSeed from "@/lib/scraper/lever/companies.json";
 import ashbySeed from "@/lib/scraper/ashby/companies.json";
-import type { JobBoard, LeverHost } from "@/models/automation.model";
+import personioSeed from "@/lib/scraper/personio/companies.json";
+import type {
+  AtsCompanyHost,
+  JobBoard,
+  LeverHost,
+  PersonioHost,
+} from "@/models/automation.model";
 import { getWatchedBoards } from "@/actions/company.actions";
 import {
   rankCompanySuggestions,
   type RankedCompany,
 } from "@/lib/scraper/ats/suggestCompanies";
+import { personioBoardBase } from "@/lib/scraper/personio/mapper";
 
-// `host` is present (optional) on Lever entries only; Greenhouse entries omit it.
-type SeedCompany = { name: string; token: string; host?: LeverHost };
+// `host` is present on Lever / Personio entries when known; Greenhouse/Ashby omit it.
+type SeedCompany = { name: string; token: string; host?: AtsCompanyHost };
 
 const SEEDS: Record<string, SeedCompany[]> = {
   greenhouse: greenhouseSeed,
   lever: leverSeed as SeedCompany[],
   ashby: ashbySeed as SeedCompany[],
+  personio: personioSeed as SeedCompany[],
 };
 
 /** Default how many hybrid suggestions to return for the wizard. */
 const SUGGEST_DEFAULT_LIMIT = 20;
 
 type ResolveResult =
-  | { success: true; name: string; token: string; host?: LeverHost }
+  | { success: true; name: string; token: string; host?: AtsCompanyHost }
   | { success: false; message: string };
 
 export type SuggestAtsCompaniesInput = {
@@ -119,6 +127,7 @@ export async function resolveAtsBoard(
   if (provider === "greenhouse") return resolveGreenhouse(input);
   if (provider === "lever") return resolveLever(input);
   if (provider === "ashby") return resolveAshby(input);
+  if (provider === "personio") return resolvePersonio(input);
   return { success: false, message: "Unsupported provider" };
 }
 
@@ -317,5 +326,99 @@ async function resolveAshby(input: string): Promise<ResolveResult> {
     return { success: true, name: seeded?.name ?? humanizeToken(token), token };
   } catch {
     return { success: false, message: "Could not reach Ashby" };
+  }
+}
+
+// Personio: extract slug from {slug}.jobs.personio.de|com, jobs.personio.de/{slug},
+// or a bare token; probe .de then .com XML feeds; persist the working host.
+function extractPersonioToken(
+  input: string,
+): { token: string; host?: PersonioHost } | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const subdomainMatch = trimmed.match(
+    /(?:https?:\/\/)?([a-z0-9][a-z0-9_-]{0,79})\.jobs\.personio\.(de|com)(?:\/|$|\?)/i,
+  );
+  if (subdomainMatch) {
+    return {
+      token: subdomainMatch[1].toLowerCase(),
+      host: subdomainMatch[2].toLowerCase() as PersonioHost,
+    };
+  }
+
+  const pathMatch = trimmed.match(
+    /(?:https?:\/\/)?jobs\.personio\.(de|com)\/([a-z0-9][a-z0-9_-]{0,79})(?:\/|$|\?)/i,
+  );
+  if (pathMatch) {
+    return {
+      token: pathMatch[2].toLowerCase(),
+      host: pathMatch[1].toLowerCase() as PersonioHost,
+    };
+  }
+
+  if (!trimmed.includes("/") && !trimmed.includes(".")) {
+    return { token: trimmed.toLowerCase() };
+  }
+
+  return null;
+}
+
+async function probePersonioBoard(
+  token: string,
+  host: PersonioHost,
+): Promise<boolean> {
+  const url = `${personioBoardBase(token, host)}/xml?language=${encodeURIComponent(
+    APP_CONSTANTS.PERSONIO_FEED_LANGUAGE_PRIMARY,
+  )}`;
+  const res = await fetch(url);
+  res.body?.cancel();
+  return res.ok;
+}
+
+async function resolvePersonio(input: string): Promise<ResolveResult> {
+  const extracted = extractPersonioToken(input);
+  if (!extracted) {
+    return {
+      success: false,
+      message: "Paste a jobs.personio.de / .com link or a token",
+    };
+  }
+
+  const { token } = extracted;
+  if (!ATS_TOKEN_REGEX.test(token)) {
+    return { success: false, message: `Invalid Personio token '${token}'` };
+  }
+
+  try {
+    let host: PersonioHost;
+    if (extracted.host) {
+      if (!(await probePersonioBoard(token, extracted.host))) {
+        return {
+          success: false,
+          message: `No Personio board found for '${token}'`,
+        };
+      }
+      host = extracted.host;
+    } else if (await probePersonioBoard(token, "de")) {
+      host = "de";
+    } else if (await probePersonioBoard(token, "com")) {
+      host = "com";
+    } else {
+      return {
+        success: false,
+        message: `No Personio board found for '${token}'`,
+      };
+    }
+
+    const seeded = (personioSeed as SeedCompany[]).find((c) => c.token === token);
+    return {
+      success: true,
+      name: seeded?.name ?? humanizeToken(token),
+      token,
+      host,
+    };
+  } catch {
+    return { success: false, message: "Could not reach Personio" };
   }
 }

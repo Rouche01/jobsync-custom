@@ -43,9 +43,11 @@ export const GreenhouseSourceConfigSchema = z.object({
 
 // Override `token` with the allowlist regex so a directly-POSTed Lever config
 // can't smuggle a malformed token past the save boundary.
+// Host covers Lever (default/eu) and Personio (de/com) because LeverCompany is
+// also the shared picker/watchlist row type across boards that persist a host.
 export const LeverCompanySchema = GreenhouseCompanySchema.extend({
   token: z.string().regex(ATS_TOKEN_REGEX),
-  host: z.enum(["default", "eu"]).optional(),
+  host: z.enum(["default", "eu", "de", "com"]).optional(),
 });
 
 // Same fields/MAX/cap as Greenhouse, `companies` swapped to LeverCompanySchema.

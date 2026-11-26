@@ -7,7 +7,7 @@ import type {
 } from "@/models/automation.model";
 import type { AtsConfigValue } from "../AtsSearchStep";
 
-export type AtsKey = "greenhouse" | "lever" | "ashby";
+export type AtsKey = "greenhouse" | "lever" | "ashby" | "personio";
 
 export const EMPTY_ATS: AtsConfigValue = {
   companies: [],
@@ -80,7 +80,10 @@ export function parseEditSourceConfig(
   if (!sc) return undefined;
   try {
     const parsed = JSON.parse(sc);
-    return parsed?.greenhouse || parsed?.lever || parsed?.ashby
+    return parsed?.greenhouse ||
+      parsed?.lever ||
+      parsed?.ashby ||
+      parsed?.personio
       ? parsed
       : undefined;
   } catch {

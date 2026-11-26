@@ -1,12 +1,11 @@
 import { APP_CONSTANTS } from "@/lib/constants";
-import type { JobBoard, LeverHost } from "@/models/automation.model";
+import type { AtsCompanyHost, JobBoard } from "@/models/automation.model";
 
-// Public job-board URL for a company. Lever's public posting host
-// (jobs.lever.co / jobs.eu.lever.co) is region-specific and differs from its
-// API host, so it's resolved from the company's persisted `host`.
+// Public job-board URL for a company. Lever and Personio hosts are region/
+// TLD-specific and persisted on the company so we never re-probe.
 export function companyBoardUrl(
   jobBoard: JobBoard,
-  company: { token: string; host?: LeverHost },
+  company: { token: string; host?: AtsCompanyHost },
 ): string {
   if (jobBoard === "lever") {
     const base =
@@ -17,6 +16,13 @@ export function companyBoardUrl(
   }
   if (jobBoard === "ashby") {
     return `${APP_CONSTANTS.ASHBY_JOB_URL}/${company.token}`;
+  }
+  if (jobBoard === "personio") {
+    const template =
+      company.host === "com"
+        ? APP_CONSTANTS.PERSONIO_JOB_URL_COM
+        : APP_CONSTANTS.PERSONIO_JOB_URL_DE;
+    return template.replace("{slug}", encodeURIComponent(company.token));
   }
   return `${APP_CONSTANTS.GREENHOUSE_BOARD_URL}/${company.token}`;
 }

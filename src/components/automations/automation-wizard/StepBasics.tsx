@@ -80,6 +80,9 @@ export function StepBasics({
                 </SelectItem>
                 <SelectItem value="lever">Lever (company boards)</SelectItem>
                 <SelectItem value="ashby">Ashby (company boards)</SelectItem>
+                <SelectItem value="personio">
+                  Personio (company boards)
+                </SelectItem>
               </SelectContent>
             </Select>
             <FormDescription>

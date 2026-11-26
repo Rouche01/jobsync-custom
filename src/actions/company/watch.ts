@@ -2,7 +2,10 @@
 import prisma from "@/lib/db";
 import { handleError } from "@/lib/utils";
 import { canonicalizeEntityValue } from "@/lib/jobs/canonicalize";
-import type { JobBoard, LeverHost } from "@/models/automation.model";
+import type {
+  AtsCompanyHost,
+  JobBoard,
+} from "@/models/automation.model";
 import type { Company } from "@/models/job.model";
 import { requireUser } from "../shared";
 
@@ -19,7 +22,7 @@ export type WatchedBoard = {
   id: string;
   name: string;
   token: string;
-  host?: LeverHost;
+  host?: AtsCompanyHost;
   provider: JobBoard;
 };
 
@@ -35,7 +38,7 @@ const WATCHED_BOARD_SELECT = {
 // token and host all arrive from JSON the browse view already loaded.
 export const watchBoardCompany = async (
   provider: JobBoard,
-  board: { name: string; token: string; host?: LeverHost },
+  board: { name: string; token: string; host?: AtsCompanyHost },
   opts?: { confirmMerge?: boolean },
 ): Promise<WatchBoardResult> => {
   try {
@@ -44,7 +47,12 @@ export const watchBoardCompany = async (
     const value = canonicalizeEntityValue(board.name.trim(), {
       stripLegalSuffix: true,
     });
-    const atsHost = provider === "lever" ? (board.host ?? "default") : null;
+    const atsHost =
+      provider === "lever"
+        ? (board.host ?? "default")
+        : provider === "personio"
+          ? (board.host ?? "de")
+          : null;
     const coords = {
       atsProvider: provider,
       atsToken: board.token,
@@ -193,7 +201,7 @@ export const getWatchedBoards = async (
       name: row.label,
       token: row.atsToken as string,
       provider: row.atsProvider as JobBoard,
-      ...(row.atsHost ? { host: row.atsHost as LeverHost } : {}),
+      ...(row.atsHost ? { host: row.atsHost as AtsCompanyHost } : {}),
     }));
   } catch {
     return [];

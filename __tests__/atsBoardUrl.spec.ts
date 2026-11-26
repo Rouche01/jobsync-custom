@@ -44,4 +44,16 @@ describe("companyBoardUrl", () => {
       `${APP_CONSTANTS.ASHBY_JOB_URL}/ramp`,
     );
   });
+
+  it("builds a Personio .de board URL by default", () => {
+    expect(companyBoardUrl("personio", { token: "personio" })).toBe(
+      "https://personio.jobs.personio.de",
+    );
+  });
+
+  it("builds a Personio .com board URL when host is com", () => {
+    expect(
+      companyBoardUrl("personio", { token: "acme", host: "com" }),
+    ).toBe("https://acme.jobs.personio.com");
+  });
 });

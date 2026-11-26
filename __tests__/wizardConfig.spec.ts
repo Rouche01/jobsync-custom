@@ -39,7 +39,7 @@ describe("parseEditSourceConfig", () => {
 
 describe("PROVIDER_META", () => {
   it("has an entry for every board the wizard can select", () => {
-    ["greenhouse", "lever", "ashby"].forEach((board) => {
+    ["greenhouse", "lever", "ashby", "personio"].forEach((board) => {
       expect(PROVIDER_META[board]).toBeDefined();
       expect(PROVIDER_META[board].label.length).toBeGreaterThan(0);
     });

@@ -11,11 +11,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PROVIDER_META } from "@/components/automations/ats-search-step/types";
-import type { JobBoard } from "@/models/automation.model";
+import type { AtsCompanyHost, JobBoard } from "@/models/automation.model";
 
 export type PendingMerge = {
   provider: JobBoard;
-  board: { name: string; token: string; host?: "default" | "eu" };
+  board: { name: string; token: string; host?: AtsCompanyHost };
   existing: { id: string; label: string };
 };
 

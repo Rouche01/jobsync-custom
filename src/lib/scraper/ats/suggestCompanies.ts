@@ -1,9 +1,9 @@
-import type { LeverHost } from "@/models/automation.model";
+import type { AtsCompanyHost } from "@/models/automation.model";
 
 export type SuggestableCompany = {
   name: string;
   token: string;
-  host?: LeverHost;
+  host?: AtsCompanyHost;
 };
 
 export type SuggestReason = "watchlist" | "title" | "keyword";

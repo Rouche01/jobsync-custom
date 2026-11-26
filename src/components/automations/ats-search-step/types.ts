@@ -1,9 +1,19 @@
-import type { LeverSourceConfig } from "@/models/automation.model";
+import type {
+  AtsCompanyHost,
+  GreenhouseSourceConfig,
+} from "@/models/automation.model";
 
-// The step is provider-agnostic; it edits the canonical Lever config shape — a
-// superset of Greenhouse's, where the extra per-company `host` is unused and
-// UI-invisible for Greenhouse.
-export type AtsConfigValue = LeverSourceConfig;
+// Provider-agnostic wizard config: Greenhouse fields plus optional per-company
+// host (Lever default/eu, Personio de/com; unused for Greenhouse/Ashby).
+export type AtsConfigCompany = {
+  name: string;
+  token: string;
+  host?: AtsCompanyHost;
+};
+
+export type AtsConfigValue = Omit<GreenhouseSourceConfig, "companies"> & {
+  companies: AtsConfigCompany[];
+};
 
 export type EntityOption = { id: string; label: string; value: string };
 
@@ -25,5 +35,10 @@ export const PROVIDER_META: Record<
     label: "Ashby",
     urlHint: "Or paste a jobs.ashbyhq.com link or token",
     searchExample: "Ramp",
+  },
+  personio: {
+    label: "Personio",
+    urlHint: "Or paste a jobs.personio.de / .com link or token",
+    searchExample: "Personio",
   },
 };
