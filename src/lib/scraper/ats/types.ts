@@ -1,9 +1,9 @@
 import type { JobBoard } from "@/models/automation.model";
 import type { JobDetails } from "../types";
 
-// `host` is optional and Lever-only (Greenhouse ignores it); it's persisted
-// once a company is resolved so runtime fetches never re-probe regions.
-export type AtsHost = "default" | "eu";
+// Optional per-company host persisted after resolve so runtime fetches never
+// re-probe. Lever uses default/eu; Personio uses de/com; Greenhouse/Ashby ignore it.
+export type AtsHost = "default" | "eu" | "de" | "com";
 
 export interface AtsProvider {
   id: JobBoard;
