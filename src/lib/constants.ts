@@ -143,6 +143,18 @@ export const APP_CONSTANTS = {
   ASHBY_FETCH_TIMEOUT_MS: 25_000, // per-board AbortController timeout
   ASHBY_FETCH_CONCURRENCY: 5,
 
+  // Personio (public XML career feed — unauthenticated, whole board in one call).
+  // Boards live at {slug}.jobs.personio.de or .com. Language selects which copy
+  // of each posting the feed returns — not which countries. Prefer EN for
+  // ranking/matching against English resumes; fall back to DE when a position
+  // has no useful EN title/description (common for Mittelstand boards).
+  PERSONIO_JOB_URL_DE: "https://{slug}.jobs.personio.de",
+  PERSONIO_JOB_URL_COM: "https://{slug}.jobs.personio.com",
+  PERSONIO_FEED_LANGUAGE_PRIMARY: "en",
+  PERSONIO_FEED_LANGUAGE_FALLBACK: "de",
+  PERSONIO_FETCH_TIMEOUT_MS: 25_000, // per-board AbortController timeout
+  PERSONIO_FETCH_CONCURRENCY: 5,
+
   // MCP server settings
   MCP_DUPLICATE_WINDOW_DAYS: 30,
   MCP_TOKEN_EXPIRY_PRESETS: [30, 90, 365] as const,

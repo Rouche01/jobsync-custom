@@ -11,7 +11,7 @@ export type AutomationRunStatus =
   | "rate_limited"
   | "cancelled";
 export type DiscoveryStatus = "new" | "accepted" | "dismissed";
-export type JobBoard = "greenhouse" | "lever" | "ashby";
+export type JobBoard = "greenhouse" | "lever" | "ashby" | "personio";
 
 export interface GreenhouseCompany {
   name: string;
@@ -54,16 +54,37 @@ export interface AshbySourceConfig
   companies: AshbyCompany[];
 }
 
+// Personio career pages live on either .jobs.personio.de or .jobs.personio.com;
+// persist which host resolved so runtime fetches never re-probe.
+export type PersonioHost = "de" | "com";
+
+export interface PersonioCompany {
+  name: string;
+  token: string;
+  host?: PersonioHost; // absent/"de" = the Germany-first default
+}
+
+export interface PersonioSourceConfig
+  extends Omit<GreenhouseSourceConfig, "companies"> {
+  companies: PersonioCompany[];
+}
+
 export interface SourceConfig {
   greenhouse?: GreenhouseSourceConfig;
   lever?: LeverSourceConfig;
   ashby?: AshbySourceConfig;
+  personio?: PersonioSourceConfig;
 }
 
 // Plain, dependency-free board list. Do NOT import this from ats/registry.ts
 // (that pulls the network-calling search fns into client bundles). Both the
 // client-imported schema and the scheduler import it here.
-export const ATS_BOARDS: JobBoard[] = ["greenhouse", "lever", "ashby"];
+export const ATS_BOARDS: JobBoard[] = [
+  "greenhouse",
+  "lever",
+  "ashby",
+  "personio",
+];
 
 // Boards that used to exist and were removed. Their Automation rows stay in
 // the database; the UI marks them retired and only offers pause/delete.
