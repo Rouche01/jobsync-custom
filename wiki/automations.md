@@ -3,7 +3,7 @@ type: how-to
 title: Automations
 description: Setting up a scheduled ATS search — criteria first, suggested companies to confirm, then resume matching — and handling the jobs it discovers.
 feature: automations
-tags: [automations, job search, scheduled search, greenhouse, lever, ashby, ats, company boards, watchlist, suggested companies, discovered jobs, match score, keywords, target titles, locations, resume skills, filters, notifications]
+tags: [automations, job search, scheduled search, greenhouse, lever, ashby, personio, ats, company boards, watchlist, suggested companies, discovered jobs, match score, keywords, target titles, locations, resume skills, filters, notifications]
 aliases: [automated job search, job discovery, scheduled job search, job scraper, run a search, discovered jobs]
 status: stable
 stale_after: 2027-09-30
@@ -15,13 +15,15 @@ stale_after: 2027-09-30
 
 An automation is a saved search that runs once a day. You start with **what you want** (titles, keywords, locations and a resume). JobSync helps you **confirm a shortlist of companies**, then reads those public boards, filters listings, scores the best ones against your resume, and saves **discovered jobs** you can accept or dismiss.
 
-It only reads **Greenhouse**, **Lever** and **Ashby** boards — not the whole internet. One automation covers one board; create another for a different provider. At least one company is required. You also need **Settings → AI Provider** and a resume to match against.
+It only reads **Greenhouse**, **Lever**, **Ashby** and **Personio** boards — not the whole internet. One automation covers one board; create another for a different provider (or **Duplicate** an existing one and switch the board). At least one company is required. You also need **Settings → AI Provider** and a resume to match against.
+
+**Personio** is especially useful for German / DACH mid-market employers. Feeds prefer English posting copy and fall back to German when EN is empty. The seeded directory is a curated starter list — paste a `*.jobs.personio.de` / `.com` link or token to add boards that are not listed yet.
 
 ## How do I create an automation?
 
 Open **Automations** and click **Create Automation**. To reuse an existing one (for example on another board), use **Duplicate** from the list **⋮** menu or the detail header — the wizard opens prefilled so you can change the board, companies, schedule, and other fields before creating a new automation. The wizard has six steps:
 
-1. **Basics** — name and job board (Greenhouse, Lever or Ashby).
+1. **Basics** — name and job board (Greenhouse, Lever, Ashby or Personio).
 2. **Search** — criteria first (titles, keywords, locations, run options), then confirm suggested or manually picked companies (up to 25).
 3. **Resume** — the resume used for scoring. Resumes with fewer than two sections are greyed out until you fill them in under **Profile**.
 4. **Matching** — match threshold; below-threshold AI scores are discarded.

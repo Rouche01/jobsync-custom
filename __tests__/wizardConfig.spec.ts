@@ -35,6 +35,19 @@ describe("parseEditSourceConfig", () => {
       ashby: { companies: [{ name: "Ramp", token: "ramp" }] },
     });
   });
+
+  it("keeps a Personio config so editing a Personio automation keeps its companies", () => {
+    const sc = JSON.stringify({
+      personio: {
+        companies: [{ name: "Personio", token: "personio", host: "de" }],
+      },
+    });
+    expect(parseEditSourceConfig(sc)).toEqual({
+      personio: {
+        companies: [{ name: "Personio", token: "personio", host: "de" }],
+      },
+    });
+  });
 });
 
 describe("PROVIDER_META", () => {
@@ -137,5 +150,22 @@ describe("buildDuplicateDefaults", () => {
     const next = migrateAtsConfigOnBoardChange(undefined, "lever", "ashby");
     expect(next.ashby?.topK).toBe(APP_CONSTANTS.MAX_JOBS_PER_RUN);
     expect(next.ashby?.companies).toEqual([]);
+  });
+
+  it("migrates criteria onto Personio and clears companies", () => {
+    const next = migrateAtsConfigOnBoardChange(
+      {
+        greenhouse: {
+          companies: [{ name: "Acme", token: "acme" }],
+          targetTitles: ["Engineer"],
+          keywords: ["TypeScript"],
+        },
+      },
+      "greenhouse",
+      "personio",
+    );
+    expect(next.personio?.companies).toEqual([]);
+    expect(next.personio?.targetTitles).toEqual(["Engineer"]);
+    expect(next.personio?.keywords).toEqual(["TypeScript"]);
   });
 });

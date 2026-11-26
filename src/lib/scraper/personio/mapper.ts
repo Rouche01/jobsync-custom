@@ -66,11 +66,15 @@ export function personioEmploymentType(
   return parts.length > 0 ? parts.join(" / ") : undefined;
 }
 
-/** EN copy is usable when it has both a title and a description body. */
+/** EN copy is usable when it has a title and at least one non-empty body block. */
 export function hasUsefulPersonioCopy(position: PersonioPosition): boolean {
   const title = (position.name ?? "").trim();
-  const description = personioDescriptionHtml(position).trim();
-  return title.length > 0 && description.length > 0;
+  if (!title) return false;
+  // Headings alone do not count — Mittelstand EN feeds often ship empty CDATA
+  // with section titles, and DE still has the real text.
+  return jobDescriptionBlocks(position).some(
+    (block) => (block.value ?? "").trim().length > 0,
+  );
 }
 
 export function mapPersonioJob(

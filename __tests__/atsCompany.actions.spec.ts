@@ -347,3 +347,101 @@ describe("searchAtsCompanies (ashby)", () => {
     expect(companies[0]).toHaveProperty("token");
   });
 });
+
+describe("resolveAtsBoard (personio branch)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getCurrentUser as any).mockResolvedValue(user);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  function okProbe(status = 200) {
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      body: { cancel: vi.fn() },
+    } as unknown as Response;
+  }
+
+  it("extracts the token and host from a .jobs.personio.de URL", async () => {
+    const spy = vi.spyOn(global, "fetch").mockResolvedValue(okProbe(200));
+
+    const result = await resolveAtsBoard(
+      "personio",
+      "https://acme.jobs.personio.de",
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.token).toBe("acme");
+    expect(result.host).toBe("de");
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(String(spy.mock.calls[0][0])).toContain(
+      "https://acme.jobs.personio.de/xml",
+    );
+  });
+
+  it("extracts the token from a jobs.personio.com path URL", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(okProbe(200));
+
+    const result = await resolveAtsBoard(
+      "personio",
+      "https://jobs.personio.com/acme/job/1",
+    );
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.token).toBe("acme");
+    expect(result.host).toBe("com");
+  });
+
+  it("probes .de then .com for a bare token", async () => {
+    const spy = vi
+      .spyOn(global, "fetch")
+      .mockResolvedValueOnce(okProbe(404))
+      .mockResolvedValueOnce(okProbe(200));
+
+    const result = await resolveAtsBoard("personio", "Acme");
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.token).toBe("acme");
+    expect(result.host).toBe("com");
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an unknown board after probing both hosts", async () => {
+    const spy = vi.spyOn(global, "fetch").mockResolvedValue(okProbe(404));
+
+    const result = await resolveAtsBoard("personio", "nope");
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.message).toContain("nope");
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a malformed token before any fetch", async () => {
+    const spy = vi.spyOn(global, "fetch");
+
+    const result = await resolveAtsBoard("personio", "../etc/passwd");
+
+    expect(result.success).toBe(false);
+    expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe("searchAtsCompanies (personio)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (getCurrentUser as any).mockResolvedValue(user);
+  });
+
+  it("serves the Personio seed, not an empty list", async () => {
+    expect(await getAtsCompanyCount("personio")).toBeGreaterThan(0);
+    const { companies } = await searchAtsCompanies("personio", "");
+    expect(companies.length).toBeGreaterThan(0);
+    expect(companies[0]).toHaveProperty("token");
+  });
+});
