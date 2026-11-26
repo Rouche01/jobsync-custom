@@ -198,15 +198,15 @@ try {
 } catch {
   previous = [];
 }
-const byToken = new Map(previous.map((c) => [c.token, c]));
-for (const row of live) byToken.set(row.token, row);
+const mergedByToken = new Map(previous.map((c) => [c.token, c]));
+for (const row of live) mergedByToken.set(row.token, row);
 for (const [token, name] of Object.entries(NAME_OVERRIDES)) {
-  const row = byToken.get(token);
+  const row = mergedByToken.get(token);
   if (row) row.name = name;
-  else byToken.set(token, { name, token });
+  else mergedByToken.set(token, { name, token });
 }
 
-const merged = [...byToken.values()].sort((a, b) =>
+const merged = [...mergedByToken.values()].sort((a, b) =>
   a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
 );
 
