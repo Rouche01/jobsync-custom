@@ -1,6 +1,98 @@
 [
   {
+    "name": "1KOMMA5°",
+    "token": "1komma5grad"
+  },
+  {
+    "name": "]init[ AG",
+    "token": "init-ag"
+  },
+  {
+    "name": "Ada Health",
+    "token": "ada"
+  },
+  {
+    "name": "Autonomous Teaming",
+    "token": "autonomous-teaming"
+  },
+  {
+    "name": "Auxmoney",
+    "token": "auxmoney-gmbh"
+  },
+  {
+    "name": "Clark",
+    "token": "clark"
+  },
+  {
+    "name": "Contorion",
+    "token": "contorion"
+  },
+  {
+    "name": "Dental21",
+    "token": "dental21"
+  },
+  {
+    "name": "Fairmas",
+    "token": "fairmas"
+  },
+  {
+    "name": "getpress",
+    "token": "getpress-gmbh"
+  },
+  {
+    "name": "HolidayCheck",
+    "token": "holidaycheck"
+  },
+  {
+    "name": "Indra Avitech",
+    "token": "indra-avitech"
+  },
+  {
+    "name": "Join",
+    "token": "join"
+  },
+  {
+    "name": "Kipu Quantum",
+    "token": "kipu-quantum"
+  },
+  {
+    "name": "LiveEO",
+    "token": "liveeo-gmbh"
+  },
+  {
+    "name": "Penta",
+    "token": "penta"
+  },
+  {
     "name": "Personio",
     "token": "personio"
+  },
+  {
+    "name": "Smartbroker",
+    "token": "smartbroker"
+  },
+  {
+    "name": "Thermondo",
+    "token": "thermondo"
+  },
+  {
+    "name": "Tonies",
+    "token": "tonies"
+  },
+  {
+    "name": "Tomorrow",
+    "token": "tomorrow-gmbh"
+  },
+  {
+    "name": "Verivox",
+    "token": "verivox"
+  },
+  {
+    "name": "Vivid",
+    "token": "vivid"
+  },
+  {
+    "name": "Westwing",
+    "token": "westwing"
   }
 ]
